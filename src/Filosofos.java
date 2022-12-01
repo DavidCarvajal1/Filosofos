@@ -29,11 +29,22 @@ public class Filosofos implements Runnable {
                     tiempoDeEspera=System.currentTimeMillis();
                     while (filosofos[tenedorDerecha]&&!tiempoDeEsperaSuperado) {
                         filosofos.wait();
-                        if(System.currentTimeMillis()-tiempoDeEspera>10000);
+                        if(System.currentTimeMillis()-tiempoDeEspera>10000){
+                            tiempoDeEsperaSuperado=true;
+                        }
                     }
                     if(!filosofos[tenedorDerecha]) {
                         filosofos[tenedorDerecha] = true;
                         System.out.println("El filosofo " + id + " cogio el tenedor derecho "+(tenedorDerecha));
+                        Thread.sleep((int) (Math.random() * 3000) + 2000);
+                        //Soltamos ambos libros
+                        synchronized (filosofos) {
+                            filosofos[tenedorIzquierda] = false;
+                            filosofos[tenedorDerecha] = false;
+                            filosofos.notifyAll();
+                        }
+                        System.out.println("El filosofo " + id + " soloto los tenedores "+tenedorIzquierda+" "+(tenedorDerecha));
+
                     }else{
                         filosofos[tenedorIzquierda]=false;
                         System.out.println("El filosofo "+id+" solto los tenedor por tiempo de espera superado");
@@ -41,14 +52,6 @@ public class Filosofos implements Runnable {
                 }
 
 
-                Thread.sleep((int) (Math.random() * 3000) + 2000);
-                //Soltamos ambos libros
-                synchronized (filosofos) {
-                    filosofos[tenedorIzquierda] = false;
-                    filosofos[tenedorDerecha] = false;
-                    filosofos.notifyAll();
-                }
-                System.out.println("El filosofo " + id + " soloto los tenedores "+tenedorIzquierda+" "+(tenedorDerecha));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -59,8 +62,11 @@ public class Filosofos implements Runnable {
 
 
     public static void main(String[] args) {
+        //Lanzamos a los 5 filosofos
         for (int i = 0; i < 5; i++) {
             new Thread(new Filosofos(i)).start();
         }
+        //Lanzamos la clase que notificara a los filosofos cada 10 sec
+        new Thread(new ActualzarFilosofo()).start();
     }
 }
