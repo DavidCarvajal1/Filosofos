@@ -13,6 +13,8 @@ public class Filosofos implements Runnable {
                 if(tenedorDerecha==5){
                     tenedorDerecha=0;
                 }
+                long tiempoDeEspera;
+                boolean tiempoDeEsperaSuperado=false;
                 //Intentamos coger el primer tenedor
                 synchronized (filosofos) {
                     while (filosofos[tenedorIzquierda]) {
@@ -22,13 +24,22 @@ public class Filosofos implements Runnable {
                 }
                 System.out.println("El filosofo " + id + " cogio el tenedor izquierdo "+tenedorIzquierda);
                 //Intentamos coger el segundo tenedor
+                //Si espera mas de X tiempo, soltara el primer tenedor, sino cogera el derecho
                 synchronized (filosofos) {
-                    while (filosofos[tenedorDerecha]) {
+                    tiempoDeEspera=System.currentTimeMillis();
+                    while (filosofos[tenedorDerecha]&&!tiempoDeEsperaSuperado) {
                         filosofos.wait();
+                        if(System.currentTimeMillis()-tiempoDeEspera>10000);
                     }
-                    filosofos[tenedorDerecha] = true;
+                    if(!filosofos[tenedorDerecha]) {
+                        filosofos[tenedorDerecha] = true;
+                        System.out.println("El filosofo " + id + " cogio el tenedor derecho "+(tenedorDerecha));
+                    }else{
+                        filosofos[tenedorIzquierda]=false;
+                        System.out.println("El filosofo "+id+" solto los tenedor por tiempo de espera superado");
+                    }
                 }
-                System.out.println("El filosofo " + id + " cogio el tenedor derecho "+(tenedorDerecha));
+
 
                 Thread.sleep((int) (Math.random() * 3000) + 2000);
                 //Soltamos ambos libros
